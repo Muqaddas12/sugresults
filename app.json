@@ -7,6 +7,10 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "sugresults",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -20,21 +24,14 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.android.sugresults"
+     "package": "com.android.sugresults"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-router"
-    ],
-    "scheme": "sugresults",
     "extra": {
-      "router": {
-        "origin": false
-      },
       "eas": {
-        "projectId": "cc307ec2-8c92-4c1a-9c57-132a9e18d930"
+         "projectId": "cc307ec2-8c92-4c1a-9c57-132a9e18d930"
       }
     }
   }

@@ -6,21 +6,6 @@ import axios from 'axios';
 import { SafeAreaProvider,SafeAreaView } from 'react-native-safe-area-context';
 
 
-const Picker = ({ label, items, onValueChange, value }) => (
-  <>
-    {/* Display the label for the dropdown */}
-    <Text style={styles.label}>{label}</Text>
-
-    {/* RNPickerSelect dropdown picker */}
-    <RNPickerSelect
-      onValueChange={onValueChange} // Function called when a value is selected
-      value={value} // Current value selected in the dropdown
-      items={items} // Dropdown options (label-value pairs)
-      placeholder={{ label: '-- Choose --', value: null }} // Default placeholder when no value is selected
-      style={pickerStyles} // Custom styles for the picker
-    />
-  </>
-);
 
 
 const Homepage = () => {
@@ -32,8 +17,8 @@ const Homepage = () => {
   const [rollNumber, setRollNumber] = useState('');
   const [semester, setSemester] = useState('');
   const [loading, setLoading] = useState(false);
-  const [semestersitem,setSemestersItem]=useState([])
-  const [courseItem,setCourseItem]=useState([])
+  const [semestersitem,setSemestersItem]=useState([{ label: '-- Choose --', value: '' }])
+  const [courseItem,setCourseItem]=useState([{ label: '-- Choose --', value: '' }])
   /* This handle press function is used to check 
   to fetch data from the server and navigate through
   ViewResult helper imported from scr/helper/homepage */
@@ -140,7 +125,7 @@ const Homepage = () => {
         return
       }
       else {
-        setCourseItem([])
+        setCourseItem([{ label: '-- Choose --', value: '' }])
       }
      },[session])
 
@@ -512,6 +497,8 @@ if(session==='201819'){
         { label: 'DPHARMA Semester 2', value: 'DPHARM%20II' },
       ])
     }
+  }else{
+    setSemestersItem([{ label: '-- Choose --', value: '' }])
   }
 
   },[course])
@@ -525,26 +512,31 @@ if(session==='201819'){
       <Text style={styles.header}>Shobhit University Gangoh</Text>
       <Text style={styles.subHeader}>Results</Text>
 
-        
-         <Picker 
-        label="Select Session" 
-        items={sessionItems}
+ <Text style={styles.label}>Select Session: </Text>
+<RNPickerSelect
+placeholder={{label:' --Choose--  ',value:''}}
+  items={sessionItems}
         onValueChange={setSession} 
-        value={session} 
-      />
-
-      <Picker 
-        label="Select Your Course" 
-        items={courseItem}
-        onValueChange={setCourse} 
-        value={course} 
-      />
-<Picker 
-        label="Select Semester" 
-        items={semestersitem}
-        onValueChange={setSemester} 
-        value={semester} 
-      />
+        value={session}  
+  style={pickerStyles} 
+/>
+        
+ <Text style={styles.label}>Select Your Course: </Text>
+<RNPickerSelect
+items={courseItem}
+onValueChange={setCourse} 
+value={course}  
+  style={pickerStyles} 
+/>
+        
+ <Text style={styles.label}>Select Semester </Text>
+<RNPickerSelect
+    items={semestersitem}
+    onValueChange={setSemester} 
+    value={semester} 
+  style={pickerStyles} 
+/>
+        
 
       <Text style={styles.label}>Enter Your Roll Number:</Text>
       <TextInput
