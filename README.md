@@ -1,6 +1,4 @@
-![App Screenshot](./screenshot/1.jpg)
-![App Screenshot](./screenshot/2.jpg)
-![App Screenshot](./screenshot/3.jpg)
+
 
 ![App Screenshot](./assets/logo.png)
 
