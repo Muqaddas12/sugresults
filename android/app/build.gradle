@@ -86,7 +86,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.sugresults"
+    namespace "com.android.sugresults"
     defaultConfig {
         applicationId 'com.android.sugresults'
         minSdkVersion rootProject.ext.minSdkVersion

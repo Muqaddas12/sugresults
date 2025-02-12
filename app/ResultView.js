@@ -1,12 +1,12 @@
 import { WebView } from 'react-native-webview';
 import { Text, TouchableOpacity, StyleSheet} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider,SafeAreaView } from 'react-native-safe-area-context';
 
 
 const ResultView = () => {
   const { data } = useLocalSearchParams(); // Get query parameters
-  const router = useRouter();
+ 
 
   // CSS for responsive design
   const mobileCSS = `
@@ -64,7 +64,7 @@ const ResultView = () => {
         domStorageEnabled={true}
         style={{ flex: 1 }}
       />
-      <TouchableOpacity style={styles.button} onPress={() => router.push('/')}>
+      <TouchableOpacity style={styles.button} onPress={() => router.replace('/')}>
         <Text style={styles.buttonText}>Search Another Number</Text>
       </TouchableOpacity> 
     </SafeAreaView>
