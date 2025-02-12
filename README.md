@@ -1,3 +1,7 @@
+![App Screenshot](./screenshot/1.png)
+![App Screenshot](./screenshot/2.png)
+![App Screenshot](./screenshot/3.png)
+
 ![App Screenshot](./assets/logo.png)
 
 # SugResults - Shobhit University Results Viewer
