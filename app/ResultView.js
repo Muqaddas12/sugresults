@@ -1,12 +1,13 @@
 import { WebView } from 'react-native-webview';
-import { Text, TouchableOpacity, StyleSheet} from 'react-native';
+import { Text, TouchableOpacity, StyleSheet,View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SafeAreaProvider,SafeAreaView } from 'react-native-safe-area-context';
-
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import React from 'react';
+import * as Print from 'expo-print'; // Import the Print module
+import { shareAsync } from 'expo-sharing';
 
 const ResultView = () => {
   const { data } = useLocalSearchParams(); // Get query parameters
- 
 
   // CSS for responsive design
   const mobileCSS = `
@@ -40,46 +41,67 @@ const ResultView = () => {
        <img height="150px" src="https://dli6r6oycdqaz.cloudfront.net/college-36/user-109260/30c39e6db4a149f89b6fd7f01e0cdde9_20210608_132206_36_109260_SUG_logo.png" />
      </div>`
   );
-
   
 
+  const HandlePrint = async () => {
+    const printHtml = `
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          ${mobileCSS}
+        </head>
+        <body>${newData || 'No Data Available'}</body>
+      </html>
+    `;
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html: printHtml }); // Print to file
+      console.log("Printed file URI:", uri); // For debugging purposes
+      await shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+    } catch (error) {
+      console.log("Print failed:", error); // Handle errors
+    }
+  };
+
   return (
-<SafeAreaProvider>
-    <SafeAreaView style={styles.safeArea}>
-      {/* WebView for displaying HTML content */}
-      <WebView
-        originWhitelist={['*']}
-        source={{
-          html: `
-            <html>
-              <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                ${mobileCSS}
-              </head>
-              <body>${newData || 'No Data Available'}</body>
-            </html>
-          `,
-        }}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        style={{ flex: 1 }}
-      />
-      <TouchableOpacity style={styles.button} onPress={() => router.replace('/')}>
-        <Text style={styles.buttonText}>Search Another Number</Text>
-      </TouchableOpacity> 
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea}>
+        {/* WebView for displaying HTML content */}
+        <WebView
+          originWhitelist={['*']}
+          source={{
+            html: `
+              <html>
+                <head>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  ${mobileCSS}
+                </head>
+                <body>${newData || 'No Data Available'}</body>
+              </html>
+            `,
+          }}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          style={{ flex: 1 }}
+        />
+       <View style={styles.buttonBox}>
+       <TouchableOpacity style={styles.button} onPress={() => router.replace('/')}>
+          <Text style={styles.buttonText}>Search Another Number</Text>
+        </TouchableOpacity>
+
+        {/* Print Button */}
+        <TouchableOpacity style={styles.button} onPress={HandlePrint}>
+          <Text style={styles.buttonText}>Download</Text>
+        </TouchableOpacity>
+       </View>
+      </SafeAreaView>
     </SafeAreaProvider>
-   
-      
-    
-   
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-
   },
   button: {
     marginVertical: 5,
@@ -90,10 +112,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   buttonText: {
-    alignItems:'center',
     fontSize: 16,
     color: '#FFFFFF',
   },
+  buttonBox:{
+    flexDirection:'row',
+    justifyContent:'space-around'
+  }
 });
 
 export default ResultView;
