@@ -37,7 +37,18 @@ const CourseBySession=(session)=>{
       
       }
       else {
-        return([{ label: '-- Choose --', value: '' }])
+      
+        return([
+          { label: 'UG & PG RESULTS', value: 'other' },
+          { label: 'UG & PG CARRY RESULTS(ODD)', value: 'otheroddc' },
+          { label: 'UG & PG CARRY RESULTS(EVEN))', value: 'otherevenc' },
+          { label: 'UG & PG CARRY RESULTS SPECIAL CARRY OVER RESULTS', value: 'otherspc' },
+          { label: 'DIPLOMA COURSES RESULTS', value: 'diploma' },
+          { label: 'DIPLOMA COURSES CARRY RESULTS(ODD)', value: 'diplomaoddc' },
+          { label: 'DIPLOMA COURSES CARRY RESULTS(EVEN)', value: 'diplomaevenc' },
+          { label: 'DIPLOMA COURSES SPECIAL CARRY OVER RESULTS', value: 'diplomaspc' },
+   
+        ])
       }
     
 }
