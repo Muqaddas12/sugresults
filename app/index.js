@@ -67,6 +67,7 @@ const Homepage = () => {
         style={styles.image}
       />
       <Text style={styles.header}>Shobhit University Gangoh</Text>
+      <Text style={styles.subHeader}>GRADE SHEET(PROVISIONAL)</Text>
       <Text style={styles.subHeader}>Results</Text>
 
       <Text style={styles.label}>Select Session: </Text>
