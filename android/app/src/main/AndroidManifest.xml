@@ -27,7 +27,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="sugresults"/>
-        <data android:scheme="com.android.sugresults"/>
+        <data android:scheme="com.mtbyown.sugresults"/>
       </intent-filter>
     </activity>
   </application>

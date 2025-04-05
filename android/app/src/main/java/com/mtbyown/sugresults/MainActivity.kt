@@ -1,4 +1,4 @@
-package com.android.sugresults
+package com.mtbyown.sugresults
 
 import android.os.Build
 import android.os.Bundle

@@ -2,7 +2,7 @@
   "expo": {
     "name": "sugresults",
     "slug": "sugresults",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/Icon.png",
     "userInterfaceStyle": "light",
@@ -24,14 +24,15 @@
         "foregroundImage": "./assets/Icon.png",
         "backgroundColor": "#ffffff"
       },
-     "package": "com.android.sugresults"
+      "package": "com.android.sugresults",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/logo.png"
     },
     "extra": {
       "eas": {
-         "projectId": "cc307ec2-8c92-4c1a-9c57-132a9e18d930"
+        "projectId": "cc307ec2-8c92-4c1a-9c57-132a9e18d930"
       }
     }
   }

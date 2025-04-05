@@ -1,4 +1,4 @@
-package com.android.sugresults;
+package com.mtbyown.sugresults;
 
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
