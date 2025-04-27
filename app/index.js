@@ -31,17 +31,17 @@ const Homepage = () => {
 
   useEffect(() => {
     const result = CourseBySession(session);
-    console.log(result);
+ 
     setCourseItem(result);
   }, [session]);
 
   // Generating semester item by using course selection
   useEffect(() => {
     if (session && course) {
+
       const result = SemesterByCourse(session, course);
+
       setSemestersItem(result);
-    } else {
-      console.log('nothing to show');
     }
   }, [course]);
 

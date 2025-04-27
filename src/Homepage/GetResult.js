@@ -1,6 +1,6 @@
-import { NativeModules,Alert } from "react-native";
-const { CustomModule } = NativeModules;
+import {Alert } from "react-native";
 import { router } from "expo-router";
+import axios from "axios";
 const GetResults =async (course,session,rollNumber,semester) => {
 
       let url = null;  // Initialize the URL for fetching the result
@@ -14,15 +14,16 @@ const GetResults =async (course,session,rollNumber,semester) => {
     }
  
   try {
-    const result = await CustomModule.GET(url);
-    const responseUrl=result.responseUrl
-    console.log(url===responseUrl)
+    const response = await axios.get(`https://myexpressfunction-lb7pw6wsnq-uc.a.run.app?url=${url}`);  // Fetching the result from the server using axios
+   
+   const result= response.data.result;  // Extracting the result from the response
+   const rurl= response.data.url;  // Extracting the URL from the response
   // If the URL requested matches the response URL, navigate to the 'ResultView' screen
-  if (url === responseUrl) {
-        const data=result.responseBody
-    router.replace({
+  if (url===rurl) {
+       
+    router.push({
       pathname: '/ResultView',
-      params:{data},
+      params:{result},
     })  // Passing the fetched data to ResultView
   } else {
     // If URL doesn't match, display an error alert

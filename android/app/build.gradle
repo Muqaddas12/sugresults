@@ -91,8 +91,8 @@ android {
         applicationId 'com.mtbyown.sugresults'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "2.0.0"
+        versionCode 4
+        versionName "4.0.0"
     }
     signingConfigs {
         debug {
@@ -106,15 +106,22 @@ android {
         debug {
             signingConfig signingConfigs.debug
         }
-        release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
-            shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-            crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
-        }
+       release {
+    // Enables code shrinking (ProGuard/R8)
+    minifyEnabled true
+
+    // Enables resource shrinking (removes unused images, XMLs, etc.)
+    shrinkResources true
+
+    // Use your signing config (debug or release as needed)
+    signingConfig signingConfigs.debug
+
+    // ProGuard rules
+    proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+
+    // Optional: Crunch PNGs for smaller size (takes more build time)
+    crunchPngs true
+}
     }
     packagingOptions {
         jniLibs {
