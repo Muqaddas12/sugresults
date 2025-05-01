@@ -45,7 +45,9 @@ const Homepage = () => {
     }
   }, [course]);
 
+
   const handleViewResult = async () => {
+ 
     setLoading(true);
     if (!course || !rollNumber || !semester || !session) {
       Alert.alert('Error', 'All fields are required');
@@ -57,6 +59,15 @@ const Homepage = () => {
     setLoading(false);
   };
 
+
+  // const handleChange = () => {
+  //  console.log(rollNumber)
+  //   // Allow only letters (A-Z, a-z)
+  //   if () {
+  //     setRollNumber(rollNumber);
+  //   }
+    
+  // };
   return (
     <View style={styles.container}>
       <StatusBar barStyle={'transparent'} hidden={false} />
@@ -126,7 +137,13 @@ const Homepage = () => {
         placeholder="Enter Roll Number"
         keyboardType="numeric"
         value={rollNumber}
-        onChangeText={setRollNumber}
+        onChangeText={(text) => {
+          if (/^[0-9]*$/.test(text)) {
+            setRollNumber(text);
+          }
+         
+        }}
+  
       />
 
       <TouchableOpacity
