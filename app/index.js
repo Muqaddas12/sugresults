@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, View, StatusBar,Dimensions } from 'react-native';
+import { Image, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, View, StatusBar,Dimensions , ToastAndroid  } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select'; 
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -132,19 +132,21 @@ const Homepage = () => {
 
       <Text style={styles.label}>Enter Your Roll Number:</Text>
       <TextInput
-        editable={isSemesterSelected}
-        style={[styles.input, loading && styles.disabled]}
-        placeholder="Enter Roll Number"
-        keyboardType="numeric"
-        value={rollNumber}
-        onChangeText={(text) => {
-          if (/^[0-9]*$/.test(text)) {
-            setRollNumber(text);
-          }
-         
-        }}
-  
-      />
+  editable={isSemesterSelected}
+  style={[styles.input, loading && styles.disabled]}
+  placeholder="Enter Roll Number"
+  keyboardType="numeric"
+  value={rollNumber}
+  onChangeText={(text) => {
+    const filtered = text.replace(/[^0-9]/g, '').slice(0, 15);
+    setRollNumber(filtered);
+    if (rollNumber.length >= 15) {
+      ToastAndroid.show('Maximum 15 digits allowed', ToastAndroid.SHORT);
+    }
+  }
+  }
+/>
+
 
       <TouchableOpacity
         onPress={!loading && handleViewResult}
