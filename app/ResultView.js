@@ -2,13 +2,14 @@ import { WebView } from 'react-native-webview';
 import { Text, TouchableOpacity, StyleSheet,View ,Platform,PermissionsAndroid,Alert} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import React from 'react';
-import * as Print from 'expo-print'; // Import the Print module
-// import { shareAsync } from 'expo-sharing';
-import RNFS from 'react-native-fs'; // Import the file system module
+import React, { useState } from 'react';
+import * as Print from 'expo-print'; 
+import LoadingIndicator from '../src/components/ActivityIndicator';
+import RNFS from 'react-native-fs'; 
 
 const ResultView = () => {
-  const { result } = useLocalSearchParams(); // Get query parameters
+  const { result } = useLocalSearchParams(); 
+  const [loading,setLoading]=useState(false)
 
   // CSS for responsive design
   const mobileCSS = `
@@ -44,7 +45,7 @@ const ResultView = () => {
   );
 
   const requestPermission = async () => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android'&&Platform.Version<30) {
       try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
@@ -65,6 +66,7 @@ const ResultView = () => {
     return true; // iOS doesn't need this permission
   };
   const saveFile = async () => {
+    setLoading(true)
     const newHtml = `
   <html>
     <head>
@@ -115,22 +117,29 @@ const ResultView = () => {
     const hasPermission = await requestPermission();
     if (!hasPermission) {
       Alert.alert('Permission Denied', 'Storage permission is required.');
+      setLoading(false)
       return;
     }
+const savePath=`${RNFS.DownloadDirectoryPath}/sugresults/`
 
     const { uri } = await Print.printToFileAsync({ html: newHtml });
- 
+ const desPathIsExists=await RNFS.exists(savePath)
+if(!desPathIsExists){
+  await RNFS.mkdir(savePath)
+
+}
    // Define destination path
-   const destPath = `${RNFS.DownloadDirectoryPath}/result_${Date.now()}.pdf`;
+   const destPath = `${savePath}sugresults_${Date.now()}.pdf`;
   
     try {
      // Copy the generated PDF to Downloads folder
      await RNFS.copyFile(uri, destPath);
       Alert.alert('Success', `Saved to ${destPath}`);
     } catch (err) {
-   
+   setLoading(false)
       Alert.alert('Error', 'Failed to save file');
     }
+    setLoading(false)
   };  
 
   // const HandlePrint = async () => {
@@ -179,15 +188,18 @@ const ResultView = () => {
           style={{ flex: 1 }}
         />
        <View style={styles.buttonBox}>
-       <TouchableOpacity style={styles.button} onPress={() => router.push('/')}>
+       <TouchableOpacity disabled={loading} style={[styles.button,loading?styles.buttonDisabled:styles.buttonEnabled]} onPress={() => router.push('/')}>
           <Text style={styles.buttonText}>Search Another Number</Text>
         </TouchableOpacity>
 
         {/* Print Button */}
-        <TouchableOpacity style={styles.button} onPress={saveFile}>
+        <TouchableOpacity 
+        disabled={loading}
+        style={[styles.button,loading?styles.buttonDisabled:styles.buttonEnabled]} onPress={saveFile}>
           <Text style={styles.buttonText}>Download</Text>
         </TouchableOpacity>
        </View>
+      {loading&& <LoadingIndicator/>}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -199,7 +211,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginVertical: 5,
-    backgroundColor: '#007BFF',
+ 
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
@@ -212,7 +224,13 @@ const styles = StyleSheet.create({
   buttonBox:{
     flexDirection:'row',
     justifyContent:'space-around'
-  }
+  },buttonDisabled: {
+    backgroundColor: '#aaa',
+   
+  },
+  buttonEnabled:{
+    backgroundColor: '#007BFF',
+  },
 });
 
 export default ResultView;

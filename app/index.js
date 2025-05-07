@@ -25,6 +25,7 @@ const Homepage = () => {
   const [isSessionSelected, setSessionSelected] = useState(false);
   const [isCourseSelected, setCourseSelected] = useState(false);
   const [isSemesterSelected, setSemesterSelected] = useState(false);
+ 
 
   // Generating session Items
   const sessionItems = generateSessionOptions();
@@ -47,7 +48,7 @@ const Homepage = () => {
 
 
   const handleViewResult = async () => {
- 
+
     setLoading(true);
     if (!course || !rollNumber || !semester || !session) {
       Alert.alert('Error', 'All fields are required');
@@ -59,15 +60,57 @@ const Homepage = () => {
     setLoading(false);
   };
 
+  const dropDownMenuHandler = (value, type) => {
 
-  // const handleChange = () => {
-  //  console.log(rollNumber)
-  //   // Allow only letters (A-Z, a-z)
-  //   if () {
-  //     setRollNumber(rollNumber);
-  //   }
-    
-  // };
+    switch (type) {
+      case 'session':
+        setSession(value);
+        setSessionLabel(value);
+        if(value===''){
+          setSessionSelected(false);
+          setCourse('');
+          setSemester('');
+          setCourseSelected(false);
+          setSemesterSelected(false);
+          break;
+        }
+  setSessionSelected(true)
+        // Reset dependent selections
+        setCourse('');
+          setSemester('');
+        break;
+  
+      case 'course':
+        setCourse(value);
+        setCourseLabel(value);
+        if(value===''){
+          setCourseSelected(false);
+          setSemester('');
+          setSemesterSelected(false);
+          break;
+        }
+
+        setCourseSelected(true)
+        // Reset semester if course changes
+        setSemester('');
+       
+        break;
+  
+      case 'semester':
+        setSemester(value);
+        setSemesterLabel(value);
+        if(value===''){
+          setSemesterSelected(false);
+          break;
+        }
+        setSemesterSelected(true);
+        break;
+  
+      default:
+        break;
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle={'transparent'} hidden={false} />
@@ -82,11 +125,7 @@ const Homepage = () => {
 
       <Text style={styles.label}>Select Session: </Text>
       <RNPickerSelect
-        onValueChange={(value) => {
-          setSession(value);
-          setSessionLabel(value);
-          setSessionSelected(true);
-        }}
+        onValueChange={(value)=>dropDownMenuHandler(value,'session')}
         items={sessionItems}
         placeholder={{
           label: '-- Choose --',
@@ -98,11 +137,7 @@ const Homepage = () => {
 
       <Text style={styles.label}>Select Your Course: </Text>
       <RNPickerSelect
-        onValueChange={(value) => {
-          setCourse(value);
-          setCourseLabel(value);
-          setCourseSelected(true);
-        }}
+        onValueChange={(value)=>dropDownMenuHandler(value,'course')}
         items={courseItem}
         placeholder={{
           label: '-- Choose --',
@@ -115,11 +150,7 @@ const Homepage = () => {
 
       <Text style={styles.label}>Select Semester: </Text>
       <RNPickerSelect
-        onValueChange={(value) => {
-          setSemester(value);
-          setSemesterLabel(value);
-          setSemesterSelected(true);
-        }}
+        onValueChange={(value)=>dropDownMenuHandler(value,'semester')}
         items={semestersItem}
         placeholder={{
           label: '-- Choose --',
@@ -149,11 +180,11 @@ const Homepage = () => {
 
 
       <TouchableOpacity
-        onPress={!loading && handleViewResult}
-        disabled={loading}
-        activeOpacity={loading ? 1 : 0.7}
-        accessibilityRole={loading ? 'none' : 'adjustable'}
-        style={styles.button}
+        onPress={()=>{
+        rollNumber.length>5?handleViewResult():  ToastAndroid.show('Maximum 15 digits allowed', ToastAndroid.SHORT);
+        }}
+        disabled={loading || rollNumber.length<6}
+        style={loading||(rollNumber.length<6)?styles.buttonDisabled:styles.button}
       >
         <Text style={styles.buttonText}>View Result</Text>
       </TouchableOpacity>
@@ -163,6 +194,7 @@ const Homepage = () => {
           <ActivityIndicator style={styles.lodingIcon} animating={loading} size="large" color="#5e46b4" />
         </View>
       )}
+      
     </View>
   );
 };
@@ -246,6 +278,13 @@ const styles = StyleSheet.create({
   disabled: {
     backgroundColor: '#e0e0e0', // Light gray when disabled
     borderColor: '#d3d3d3', // Lighter border when disabled
+  },
+  buttonDisabled: {
+    backgroundColor: '#aaa',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 20,
+    width: '80%',
   },
 });
 

@@ -32,7 +32,6 @@ const GetResults =async (course,session,rollNumber,semester) => {
   }
   } catch (error) {
      // Handle errors during the request (like network issues or server errors)
-     console.error('Error fetching result:', error);
      Alert.alert('Failed to fetch result. Please try again later.');
      return
   }
