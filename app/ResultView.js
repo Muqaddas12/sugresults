@@ -1,12 +1,13 @@
 import { WebView } from 'react-native-webview';
-import { Text, TouchableOpacity, StyleSheet,View ,Platform,PermissionsAndroid,Alert} from 'react-native';
+import { Text, TouchableOpacity, StyleSheet,View ,Platform,PermissionsAndroid,Alert,NativeModules} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import * as Print from 'expo-print'; 
 import LoadingIndicator from '../src/components/ActivityIndicator';
 import RNFS from 'react-native-fs'; 
-
+const { SaveResult } = NativeModules;
 const ResultView = () => {
   const { result } = useLocalSearchParams(); 
   const [loading,setLoading]=useState(false)
@@ -63,11 +64,10 @@ const ResultView = () => {
         return false;
       }
     }
-    return true; // iOS doesn't need this permission
+    return true; // iOS doesn't need this permission && Android version >=30
   };
-  const saveFile = async () => {
-    setLoading(true)
-    const newHtml = `
+  const generatePdf = () => {
+ const newHtml = `
   <html>
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -114,33 +114,60 @@ const ResultView = () => {
     <body  style="margin-top: 0;"} >${newData}</body>
   </html>
 `;
+  return newHtml;
+};
+
+  
+const saveFile = async () => {
+  try {
+    
     const hasPermission = await requestPermission();
+ 
     if (!hasPermission) {
       Alert.alert('Permission Denied', 'Storage permission is required.');
-      setLoading(false)
+      setLoading(false);
       return;
     }
-const savePath=`${RNFS.DownloadDirectoryPath}/sugresults/`
+    setLoading(true);
+// const newHtml= generatePdf()
+   
+// console.log(newHtml)
+//     // Generate PDF
+//     const { uri } = await Print.printToFileAsync({
+//       html: newHtml,
+   
+//      });
 
-    const { uri } = await Print.printToFileAsync({ html: newHtml });
- const desPathIsExists=await RNFS.exists(savePath)
-if(!desPathIsExists){
-  await RNFS.mkdir(savePath)
 
-}
-   // Define destination path
-   const destPath = `${savePath}sugresults_${Date.now()}.pdf`;
-  
-    try {
-     // Copy the generated PDF to Downloads folder
-     await RNFS.copyFile(uri, destPath);
-      Alert.alert('Success', `Saved to ${destPath}`);
-    } catch (err) {
-   setLoading(false)
-      Alert.alert('Error', 'Failed to save file');
+// const newUri=uri.replace('file://','')
+    
+const u= await createPDF()
+
+    if (Platform.OS === 'android') {
+      const fileName = `sugresults_${Date.now()}.pdf`;
+      await SaveResult.saveFileToDownloads(u, fileName);
+      Alert.alert('Download complete', `Saved to Downloads/sugresults/${fileName}`);
     }
-    setLoading(false)
-  };  
+
+  } catch (err) {
+    console.error(err);
+    Alert.alert('Error', 'Failed to save file: ' + (err.message || 'Unknown error'));
+  } finally {
+    setLoading(false);
+  }
+};
+ const createPDF=async()=> {
+  const newHtml=generatePdf()
+    let options = {
+      html: newHtml,
+      fileName: 'test',
+      directory: 'Documents',
+    };
+
+    let file = await RNHTMLtoPDF.convert(options)
+   
+ return file.filePath
+  }
 
   // const HandlePrint = async () => {
 
@@ -188,7 +215,7 @@ if(!desPathIsExists){
           style={{ flex: 1 }}
         />
        <View style={styles.buttonBox}>
-       <TouchableOpacity disabled={loading} style={[styles.button,loading?styles.buttonDisabled:styles.buttonEnabled]} onPress={() => router.push('/')}>
+       <TouchableOpacity disabled={loading} style={[styles.button,loading?styles.buttonDisabled:styles.buttonEnabled]} onPress={()=>router.push('/')}>
           <Text style={styles.buttonText}>Search Another Number</Text>
         </TouchableOpacity>
 
