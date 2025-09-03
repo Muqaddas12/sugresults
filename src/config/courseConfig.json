@@ -1,0 +1,58 @@
+{
+  "201819": {
+    "courses": [
+      { "label": "UG & PG RESULTS", "value": "other" },
+      { "label": "UG & PG CARRY RESULTS", "value": "otherc" },
+      { "label": "DIPLOMA COURSES RESULTS", "value": "diploma" },
+      { "label": "DIPLOMA COURSES CARRY RESULTS", "value": "diplomac" }
+    ]
+  },
+  "201920": {
+    "courses": [
+      { "label": "UG & PG RESULTS", "value": "other" },
+      { "label": "UG & PG CARRY RESULTS", "value": "otherc" },
+      { "label": "DIPLOMA COURSES RESULTS", "value": "diploma" },
+      { "label": "DIPLOMA COURSES CARRY RESULTS", "value": "diplomac" }
+    ]
+  },
+  "202021": {
+    "courses": [
+      { "label": "UG & PG RESULTS", "value": "other" },
+      { "label": "UG & PG CARRY RESULTS", "value": "otherc" },
+      { "label": "DIPLOMA COURSES RESULTS", "value": "diploma" },
+      { "label": "DIPLOMA COURSES CARRY RESULTS", "value": "diplomac" }
+    ]
+  },
+  "202122": {
+    "courses": [
+      { "label": "UG & PG RESULTS", "value": "other" },
+      { "label": "UG & PG CARRY RESULTS", "value": "otherc" },
+      { "label": "B.PHARMA CARRY RESULTS(ODD)", "value": "bpodd" },
+      { "label": "B.PHARMA CARRY RESULTS(EVEN)", "value": "bpeven" },
+      { "label": "B.PHARMA SPECIAL CARRY OVER RESULTS", "value": "bpspc" },
+      { "label": "DIPLOMA COURSES RESULTS", "value": "diploma" },
+      { "label": "DIPLOMA COURSES CARRY RESULTS", "value": "diplomac" }
+    ]
+  },
+  "202223": {
+    "courses": [
+      { "label": "UG & PG RESULTS", "value": "other" },
+      { "label": "UG & PG CARRY RESULTS", "value": "otherc" },
+      { "label": "B.PHARMA CARRY RESULTS(ODD)", "value": "bpodd" },
+      { "label": "B.PHARMA CARRY RESULTS(EVEN)", "value": "bpeven" },
+      { "label": "B.PHARMA SPECIAL CARRY OVER RESULTS", "value": "bpspc" },
+      { "label": "DIPLOMA COURSES RESULTS", "value": "diploma" },
+      { "label": "DIPLOMA COURSES CARRY RESULTS", "value": "diplomac" }
+    ]
+  },
+  "default": {
+    "courses": [
+      { "label": "UG & PG RESULTS", "value": "other" },
+      { "label": "UG & PG CARRY RESULTS(ODD)", "value": "otheroddc" },
+      { "label": "UG & PG CARRY RESULTS(EVEN)", "value": "otherevenc" },
+      { "label": "DIPLOMA COURSES RESULTS", "value": "diploma" },
+      { "label": "DIPLOMA COURSES CARRY RESULTS(ODD)", "value": "diplomaoddc" },
+      { "label": "DIPLOMA COURSES CARRY RESULTS(EVEN)", "value": "diplomaevenc" }
+    ]
+  }
+}

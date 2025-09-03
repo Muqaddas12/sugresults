@@ -1,5 +1,5 @@
  // Function to dynamically generate session labels
-  const generateSessionOptions = () => {
+  const getSessionDropdownOptions = () => {
     const startYear = 2018;  // The starting academic year (used as base for session)
     const currentYear = new Date().getFullYear();  // The current year to generate up to
   
@@ -16,4 +16,4 @@
     return sessionOptions;  // Return the list of session options
   };
 
-export default generateSessionOptions
+export default getSessionDropdownOptions

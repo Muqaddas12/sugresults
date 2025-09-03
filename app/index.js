@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Image, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, StyleSheet, View, StatusBar,Dimensions , ToastAndroid  } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select'; 
+//need to uninstall these packages
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 // Homepage Helpers
-import generateSessionOptions from '../src/Homepage/GenerateSessionOptions';
-import CourseBySession from '../src/Homepage/CourseBySessions';
-import GetResults from '../src/Homepage/GetResult';
-import SemesterByCourse from '../src/Homepage/SemesterByCourse';
+import generateSessionOptions from '../src/helper/getSessionDropdownOptions';
+
+
+import GetResults from '../src/helper/GetResult';
+import SemesterByCourse from '../src/helper/SemesterByCourse';
+
+import coursesConfig from '../src/config/courseConfig.json'
+import semesterconfig from '../src/config/semesterConfig.json'
 
 const { width, height } = Dimensions.get('window');
 
 const Homepage = () => {
+
   const [course, setCourse] = useState('');
   const [session, setSession] = useState('');
   const [rollNumber, setRollNumber] = useState('');
@@ -29,22 +35,26 @@ const Homepage = () => {
 
   // Generating session Items
   const sessionItems = generateSessionOptions();
+// 🎓 Update Courses menu items whenever session changes
+useEffect(() => {
+  // ✅ Use the courses for the selected session if available, 
+  // otherwise fall back to the default courses
+  setCourseItem(
+    coursesConfig[session] 
+      ? coursesConfig[session].courses 
+      : coursesConfig.default.courses
+  );
+}, [session]);
 
-  useEffect(() => {
-    const result = CourseBySession(session);
- 
-    setCourseItem(result);
-  }, [session]);
 
-  // Generating semester item by using course selection
-  useEffect(() => {
-    if (session && course) {
-
-      const result = SemesterByCourse(session, course);
-
-      setSemestersItem(result);
-    }
-  }, [course]);
+// Generate semester items directly using config lookup
+useEffect(() => {
+  setSemestersItem(
+    (session && course)
+      ? semesterconfig[session]?.[course] || semesterconfig.default?.[course] || []
+      : []
+  );
+}, [session, course]);
 
 
   const handleViewResult = async () => {
