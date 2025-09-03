@@ -1,58 +1,106 @@
 import { WebView } from 'react-native-webview';
-import { Text, TouchableOpacity, StyleSheet,View ,Platform,PermissionsAndroid,Alert,NativeModules} from 'react-native';
+import { Text, TouchableOpacity, StyleSheet, View, Platform, PermissionsAndroid, Alert, NativeModules } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
-import * as Print from 'expo-print'; 
 import LoadingIndicator from '../src/components/ActivityIndicator';
-import RNFS from 'react-native-fs'; 
+import RNFS from 'react-native-fs';
 const { SaveResult } = NativeModules;
-const ResultView = () => {
-  const { result } = useLocalSearchParams(); 
-  const [loading,setLoading]=useState(false)
 
-  // CSS for responsive design
+const ResultView = () => {
+  const { result } = useLocalSearchParams();
+  const [loading, setLoading] = useState(false);
+
+  // 📱 Mobile Friendly CSS
   const mobileCSS = `
     <style type="text/css">
-      body { font-family: Arial, sans-serif; margin-top: 10%; }
-      p { text-align: center; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+          Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        margin: 0;
+
+        background-color: #f9fafb;
+        color: #111827;
+      }
+
+      h1, h2, h3 {
+        text-align: center;
+        color: #1e3a8a;
+        margin-bottom: 10px;
+      }
+
+      p {
+        text-align: center;
+        font-size: 14px;
+        color: #374151;
+      }
+
+      .result-box {
+        background: #fff;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 20px;
+        margin-top: 10px;
+        border-radius: 8px;
+        overflow: hidden;
       }
-      table td, table th {
-        padding: 8px;
+
+      table th {
+        background-color: #2563eb;
+        color: #fff;
+        padding: 5px;
+        font-size: 14px;
+        text-transform: uppercase;
+      }
+
+      table td {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        padding: 5px;
         text-align: center;
+        font-size: 13px;
       }
-      table th { background-color: #f2f2f2; }
-      @media only screen and (max-width: 600px) {
-        .style1 { font-size: 1.8em; }
-        .style2 { font-size: medium; }
-        table, th, td { font-size: 0.9em; }
-        p { font-size: small; }
+
+      table tr:nth-child(even) td {
+        background-color: #f3f4f6;
       }
+
+      img {
+        display: block;
+        margin: 0 auto 15px auto;
+        max-width: 100px;
+        height: auto;
+      }
+
+  
     </style>
   `;
 
-  // Clean and transform data
+  // 🧹 Clean and transform result HTML
   let newData = result?.replace('<a href=index.php>Search Another Number</a>', '');
   newData = newData?.replace(
     `<p align="center"><img src="Icon.JPG" width="100" height="100" /><img src="sug.png" width="72" height="79" align="right" /></p>`,
-    `<div style="display: flex; justify-content: center;">
-       <img height="150px" src="https://dli6r6oycdqaz.cloudfront.net/college-36/user-109260/30c39e6db4a149f89b6fd7f01e0cdde9_20210608_132206_36_109260_SUG_logo.png" />
+    `<div style="text-align:center;">
+       <img src="https://dli6r6oycdqaz.cloudfront.net/college-36/user-109260/30c39e6db4a149f89b6fd7f01e0cdde9_20210608_132206_36_109260_SUG_logo.png" />
      </div>`
   );
 
+  // 📂 Storage Permission
   const requestPermission = async () => {
-    if (Platform.OS === 'android'&&Platform.Version<30) {
+    if (Platform.OS === 'android' && Platform.Version < 30) {
       try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
           {
             title: 'Storage Permission Required',
-            message: 'App needs access to your storage to save the HTML file',
+            message: 'App needs access to your storage to save the result PDF',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
@@ -64,139 +112,68 @@ const ResultView = () => {
         return false;
       }
     }
-    return true; // iOS doesn't need this permission && Android version >=30
+    return true; // iOS + Android 11+ don’t need it
   };
+
+  // 📝 Generate HTML for PDF
   const generatePdf = () => {
- const newHtml = `
-  <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      
-      <style>
-     
+    const newHtml = `
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          ${mobileCSS}
+        </head>
+        <body>
+          <div class="result-box">
+            ${newData}
+          </div>
+        </body>
+      </html>
+    `;
+    return newHtml;
+  };
 
-        @page {
-          size: A4;
-    margin:2cm;
-        }
-
-        html, body {
-          width: 210mm;
-          height: 297mm;
-          margin: 0 auto;
-          padding: 1cm;
-          box-sizing: border-box;
-          font-family: Arial, sans-serif;
-          font-size: 12pt;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          word-wrap: break-word;
-        }
-
-        table, th, td {
-          border: 1px solid #000;
-        }
-
-        th, td {
-          padding: 6px;
-          text-align: center;
-        }
-
-        img {
-          max-width: 100%;
-          height: auto;
-        }
-      </style>
-    </head>
-    <body  style="margin-top: 0;"} >${newData}</body>
-  </html>
-`;
-  return newHtml;
-};
-
-  
-const saveFile = async () => {
-  try {
-    
-    const hasPermission = await requestPermission();
- 
-    if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Storage permission is required.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-// const newHtml= generatePdf()
-   
-// console.log(newHtml)
-//     // Generate PDF
-//     const { uri } = await Print.printToFileAsync({
-//       html: newHtml,
-   
-//      });
-
-
-// const newUri=uri.replace('file://','')
-    
-const u= await createPDF()
-
-    if (Platform.OS === 'android') {
-      const fileName = `sugresults_${Date.now()}.pdf`;
-      await SaveResult.saveFileToDownloads(u, fileName);
-      Alert.alert('Download complete', `Saved to Downloads/sugresults/${fileName}`);
-    }
-
-  } catch (err) {
-    console.error(err);
-    Alert.alert('Error', 'Failed to save file: ' + (err.message || 'Unknown error'));
-  } finally {
-    setLoading(false);
-  }
-};
- const createPDF=async()=> {
-  const newHtml=generatePdf()
+  // 📄 Create PDF
+  const createPDF = async () => {
+    const newHtml = generatePdf();
     let options = {
       html: newHtml,
-      fileName: 'test',
+      fileName: 'sugresults',
       directory: 'Documents',
     };
+    let file = await RNHTMLtoPDF.convert(options);
+    return file.filePath;
+  };
 
-    let file = await RNHTMLtoPDF.convert(options)
-   
- return file.filePath
-  }
+  // 💾 Save PDF File
+  const saveFile = async () => {
+    try {
+      const hasPermission = await requestPermission();
+      if (!hasPermission) {
+        Alert.alert('Permission Denied', 'Storage permission is required.');
+        return;
+      }
+      setLoading(true);
 
-  // const HandlePrint = async () => {
+      const u = await createPDF();
 
-
-
-
-  //   const printHtml = `
-  //     <html>
-  //       <head>
-  //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  //         ${mobileCSS}
-  //       </head>
-  //       <body>${newData || 'No Data Available'}</body>
-  //     </html>
-  //   `;
-
-  //   try {
-  //     const { uri } = await Print.printToFileAsync({ html: printHtml }); // Print to file
-  //     console.log("Printed file URI:", uri); // For debugging purposes
-  //     await shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
-  //   } catch (error) {
-  //     console.log("Print failed:", error); // Handle errors
-  //   }
-  // };
+      if (Platform.OS === 'android') {
+        const fileName = `sugresults_${Date.now()}.pdf`;
+        await SaveResult.saveFileToDownloads(u, fileName);
+        Alert.alert('Download complete', `Saved to Downloads/sugresults/${fileName}`);
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to save file: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
-        {/* WebView for displaying HTML content */}
+        {/* 🌐 WebView to show result */}
         <WebView
           originWhitelist={['*']}
           source={{
@@ -206,27 +183,39 @@ const u= await createPDF()
                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
                   ${mobileCSS}
                 </head>
-                <body>${newData || 'No Data Available'}</body>
+                <body>
+                  <div class="result-box">
+                    ${newData || 'No Data Available'}
+                  </div>
+                </body>
               </html>
             `,
           }}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
+          javaScriptEnabled
+          domStorageEnabled
           style={{ flex: 1 }}
         />
-       <View style={styles.buttonBox}>
-       <TouchableOpacity disabled={loading} style={[styles.button,loading?styles.buttonDisabled:styles.buttonEnabled]} onPress={()=>router.push('/')}>
-          <Text style={styles.buttonText}>Search Another Number</Text>
-        </TouchableOpacity>
 
-        {/* Print Button */}
-        <TouchableOpacity 
-        disabled={loading}
-        style={[styles.button,loading?styles.buttonDisabled:styles.buttonEnabled]} onPress={saveFile}>
-          <Text style={styles.buttonText}>Download</Text>
-        </TouchableOpacity>
-       </View>
-      {loading&& <LoadingIndicator/>}
+        {/* 🔘 Bottom Buttons */}
+        <View style={styles.buttonBox}>
+          <TouchableOpacity
+            disabled={loading}
+            style={[styles.button, loading ? styles.buttonDisabled : styles.buttonEnabled]}
+            onPress={() => router.push('/')}
+          >
+            <Text style={styles.buttonText}>Search Again</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            disabled={loading}
+            style={[styles.button, loading ? styles.buttonDisabled : styles.buttonEnabled]}
+            onPress={saveFile}
+          >
+            <Text style={styles.buttonText}>Download PDF</Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading && <LoadingIndicator />}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -235,28 +224,35 @@ const u= await createPDF()
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#f9fafb',
   },
   button: {
-    marginVertical: 5,
- 
-    paddingVertical: 10,
+    marginVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 5,
+    borderRadius: 8,
     alignSelf: 'center',
+    minWidth: '40%',
+    alignItems: 'center',
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFFFFF',
+    fontWeight: '600',
   },
-  buttonBox:{
-    flexDirection:'row',
-    justifyContent:'space-around'
-  },buttonDisabled: {
-    backgroundColor: '#aaa',
-   
+  buttonBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderColor: '#e5e7eb',
   },
-  buttonEnabled:{
-    backgroundColor: '#007BFF',
+  buttonDisabled: {
+    backgroundColor: '#9ca3af',
+  },
+  buttonEnabled: {
+    backgroundColor: '#2563eb',
   },
 });
 
