@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useCallback} from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import RNFS from 'react-native-fs';
 import Share from 'react-native-share';
@@ -8,7 +9,7 @@ import BottomBar from '../src/components/BottomBar';
 
 const Downloads = () => {
   const [files, setFiles] = useState([]);
-
+const [refreshing, setRefreshing] = useState(false);
   // Fetch downloaded PDFs
   const fetchFiles = async () => {
     try {
@@ -37,9 +38,11 @@ const Downloads = () => {
     }
   };
 
-  useEffect(() => {
+ useFocusEffect(
+  useCallback(() => {
     fetchFiles();
-  }, []);
+  }, [])
+);
 
   // 📂 Open File
   const openFile = async (path) => {
@@ -102,7 +105,11 @@ const confirmDelete = (path) => {
     ]
   );
 };
-
+const onRefresh = async () => {
+  setRefreshing(true);
+  await fetchFiles();
+  setRefreshing(false);
+};
 
   const renderItem = ({ item }) => (
     <View style={styles.fileCard}>
@@ -138,12 +145,15 @@ const confirmDelete = (path) => {
           <Text style={styles.emptyText}>No files found</Text>
         </View>
       ) : (
-        <FlatList
-          data={files}
-          keyExtractor={(item) => item.path}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-        />
+       <FlatList
+  data={files}
+  keyExtractor={(item) => item.path}
+  renderItem={renderItem}
+  contentContainerStyle={styles.list}
+  refreshing={refreshing}
+  onRefresh={onRefresh}
+  showsVerticalScrollIndicator={false}
+/>
       )}
 
       {/* Bottom Bar */}
