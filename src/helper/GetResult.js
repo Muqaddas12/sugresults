@@ -20,10 +20,13 @@ const GetResults =async (course,session,rollNumber,semester) => {
    const rurl= response.data.url;  // Extracting the URL from the response
   // If the URL requested matches the response URL, navigate to the 'ResultView' screen
   if (url===rurl) {
-       
+       console.log(rollNumber)
     router.push({
       pathname: '/ResultView',
-      params:{result},
+      params:{
+        result:result,
+        rollNumber:String(rollNumber),
+      },
     })  // Passing the fetched data to ResultView
   } else {
     // If URL doesn't match, display an error alert

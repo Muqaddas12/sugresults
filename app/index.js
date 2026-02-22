@@ -164,6 +164,7 @@ useEffect(() => {
 
           <SessionSelectModal
             visible={sessionModalVisible}
+            title='Select Session'
             onClose={() => setSessionModalVisible(false)}
             items={sessionItems}
             selectedValue={session}
@@ -199,6 +200,7 @@ useEffect(() => {
 
           <SessionSelectModal
             visible={courseModalVisible}
+            title='Select Course'
             onClose={() => setCourseModalVisible(false)}
             items={courseItem}
             selectedValue={course}
@@ -236,6 +238,7 @@ useEffect(() => {
 
           <SessionSelectModal
             visible={semesterModalVisible}
+            title='Select Session'
             onClose={() => setSemesterModalVisible(false)}
             items={semestersItem}
             selectedValue={semester}

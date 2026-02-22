@@ -9,7 +9,7 @@ import logo from '../src/images/logo';
 const { SaveResult } = NativeModules;
 
 const ResultView = () => {
-  const { result } = useLocalSearchParams();
+  const { result ,rollNumber} = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
 
   // 📱 Mobile Friendly CSS
@@ -134,7 +134,7 @@ newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img s
         </body>
       </html>
     `;
-    console.log(newHtml)
+ 
     return newHtml;
   };
 
@@ -163,7 +163,9 @@ newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img s
       const u = await createPDF();
 
       if (Platform.OS === 'android') {
-        const fileName = `sugresults_${Date.now()}.pdf`;
+        const lastTwo = new Date().getSeconds().toString().padStart(2, '0');
+
+const fileName = `sugresults_${rollNumber}_${lastTwo}.pdf`;
         await SaveResult.saveFileToDownloads(u, fileName);
         Alert.alert('Download complete', `Saved to Downloads/sugresults/${fileName}`);
       }

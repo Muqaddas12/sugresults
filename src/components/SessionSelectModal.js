@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
   StyleSheet,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
 const SessionSelectModal = ({
@@ -23,38 +24,42 @@ const SessionSelectModal = ({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <Text style={styles.title}>{title}</Text>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.overlay}>
+          <TouchableWithoutFeedback>
+            <View style={styles.container}>
+              <Text style={styles.title}>{title}</Text>
 
-          <FlatList
-            data={items}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.option}
-                onPress={() => {
-                  onSelect(item.value);
-                  onClose();
-                }}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    item.value === selectedValue && styles.selected,
-                  ]}
-                >
-                  {item.label}
-                </Text>
+              <FlatList
+                data={items}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.option}
+                    onPress={() => {
+                      onSelect(item.value);
+                      onClose();
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.optionText,
+                        item.value === selectedValue && styles.selected,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+
+              <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+                <Text style={{ color: '#fff' }}>Close</Text>
               </TouchableOpacity>
-            )}
-          />
-
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={{ color: '#fff' }}>Close</Text>
-          </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

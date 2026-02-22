@@ -23,14 +23,15 @@ const [refreshing, setRefreshing] = useState(false);
 
       const result = await RNFS.readDir(downloadsDir);
 
-      const pdfFiles = result
-        .filter(item => item.isFile() && item.name.endsWith('.pdf'))
-        .map(item => ({
-          name: item.name,
-          path: item.path,
-          size: (item.size / 1024).toFixed(1), // KB
-          modified: new Date(item.mtime).toLocaleDateString(),
-        }));
+     const pdfFiles = result
+  .filter(item => item.isFile() && item.name.endsWith('.pdf'))
+  .sort((a, b) => new Date(b.mtime) - new Date(a.mtime)) // 🔥 newest first
+  .map(item => ({
+    name: item.name,
+    path: item.path,
+    size: (item.size / 1024).toFixed(1), // KB
+    modified: new Date(item.mtime).toLocaleDateString(),
+  }));
 
       setFiles(pdfFiles);
     } catch (err) {
