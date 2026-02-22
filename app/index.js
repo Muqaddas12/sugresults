@@ -16,7 +16,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from 'react-native';
-import RNPickerSelect from 'react-native-picker-select';
+import logo from '../src/images/logo';
 import SessionSelectModal from '../src/components/SessionSelectModal';
 // Helpers & Config
 import generateSessionOptions from '../src/helper/getSessionDropdownOptions';
@@ -136,7 +136,7 @@ useEffect(() => {
 
           <Image
             source={{
-              uri: 'https://dli6r6oycdqaz.cloudfront.net/college-36/user-109260/30c39e6db4a149f89b6fd7f01e0cdde9_20210608_132206_36_109260_SUG_logo.png',
+              uri: logo,
             }}
             style={styles.image}
           />
