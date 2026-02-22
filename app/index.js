@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState ,useRef} from 'react';
 import {
   Image,
   Text,
@@ -95,6 +95,7 @@ useEffect(() => {
       Alert.alert('Error', 'All fields are required');
       return;
     }
+    
   await saveSelectedData(session, course, semester, rollNumber);
     setLoading(true);
     await GetResults(course, session, rollNumber, semester);
@@ -103,32 +104,21 @@ useEffect(() => {
 
   // Dropdown state management
   const dropDownMenuHandler = (value, type) => {
-    switch (type) {
-      case 'session':
-        setSession(value);
-        setSessionSelected(!!value);
-        setCourse('');
-        setSemester('');
-        setCourseSelected(false);
-        setSemesterSelected(false);
-        break;
+  if (type === 'session') {
+    setSession(value);
+    setSessionSelected(!!value);
+  }
 
-      case 'course':
-        setCourse(value);
-        setCourseSelected(!!value);
-        setSemester('');
-        setSemesterSelected(false);
-        break;
+  if (type === 'course') {
+    setCourse(value);
+    setCourseSelected(!!value);
+  }
 
-      case 'semester':
-        setSemester(value);
-        setSemesterSelected(!!value);
-        break;
-
-      default:
-        break;
-    }
-  };
+  if (type === 'semester') {
+    setSemester(value);
+    setSemesterSelected(!!value);
+  }
+};
 
  return (
   <KeyboardAvoidingView

@@ -5,7 +5,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import LoadingIndicator from '../src/components/ActivityIndicator';
-import RNFS from 'react-native-fs';
+import logo from '../src/images/logo';
 const { SaveResult } = NativeModules;
 
 const ResultView = () => {
@@ -88,10 +88,14 @@ const ResultView = () => {
   newData = newData?.replace(
     `<p align="center"><img src="Icon.JPG" width="100" height="100" /><img src="sug.png" width="72" height="79" align="right" /></p>`,
     `<div style="text-align:center;">
-       <img src="https://dli6r6oycdqaz.cloudfront.net/college-36/user-109260/30c39e6db4a149f89b6fd7f01e0cdde9_20210608_132206_36_109260_SUG_logo.png" />
-     </div>`
+     <img src="${logo}" width="120" />
+   </div>`
   );
-
+newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img src="sug.png" width="72" height="79" align="right" />`,
+  `<div style="text-align:center;">
+     <img src="${logo}" width="120" />
+   </div>`
+)
   // 📂 Storage Permission
   const requestPermission = async () => {
     if (Platform.OS === 'android' && Platform.Version < 30) {
@@ -130,6 +134,7 @@ const ResultView = () => {
         </body>
       </html>
     `;
+    console.log(newHtml)
     return newHtml;
   };
 
