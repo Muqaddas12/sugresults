@@ -307,13 +307,14 @@ useEffect(() => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-  },
+ container: {
+  flex:1,
+  paddingHorizontal: 20,
+  paddingTop: 30,
+ 
+  backgroundColor: '#FFFFFF',
+  alignItems: 'center',
+},
 
   image: {
     width: 140,
