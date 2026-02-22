@@ -91,7 +91,7 @@ android {
         applicationId 'com.mtbyown.sugresults'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion 36
-        versionCode 9
+        versionCode 11
         versionName "5.0.0"
     }
     signingConfigs {

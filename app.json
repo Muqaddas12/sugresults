@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/Icon.png",
     "userInterfaceStyle": "light",
+    "jsEngine": "hermes",
     "newArchEnabled": true,
     "plugins": [
       "expo-router"
