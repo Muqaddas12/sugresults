@@ -116,12 +116,12 @@ const onRefresh = async () => {
     <View style={styles.fileCard}>
       <TouchableOpacity style={styles.fileInfo} onPress={() => openFile(item.path)}>
         <Icon name="document-text-outline" size={30} color="#5e46b4" style={styles.fileIcon} />
-        <View>
-          <Text style={styles.fileName}>{item.name}</Text>
-          <Text style={styles.fileMeta}>
-            {item.size} KB • {item.modified}
-          </Text>
-        </View>
+       <View style={{ flex: 1 }}>
+  <Text style={styles.fileName}>{item.name}</Text>
+  <Text style={styles.fileMeta}>
+    {item.size} KB • {item.modified}
+  </Text>
+</View>
       </TouchableOpacity>
 
       <View style={styles.actions}>
@@ -196,16 +196,19 @@ const styles = StyleSheet.create({
   fileIcon: {
     marginRight: 12,
   },
-  fileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  fileName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
+ fileInfo: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  flex: 1,
+  marginRight: 10, // 👈 space before action icons
+},
+ fileName: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#333',
+  flexShrink: 1,   // 👈 allows wrapping
+  flexWrap: 'wrap' // 👈 move to next line if long
+},
   fileMeta: {
     fontSize: 12,
     color: '#666',
