@@ -1,12 +1,12 @@
-import React, { useEffect, useState , useCallback} from 'react';
+import React, {  useState , useCallback} from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import RNFS from 'react-native-fs';
-import Share from 'react-native-share';
-import FileViewer from 'react-native-file-viewer';
-import Icon from 'react-native-vector-icons/Ionicons';
-import BottomBar from '../src/components/BottomBar';
 
+import FileViewer from 'react-native-file-viewer';
+import { Ionicons as Icon } from '@expo/vector-icons';
+import BottomBar from '../src/components/BottomBar';
+import * as Sharing from 'expo-sharing';
 const Downloads = () => {
   const [files, setFiles] = useState([]);
 const [refreshing, setRefreshing] = useState(false);
@@ -56,20 +56,20 @@ const [refreshing, setRefreshing] = useState(false);
   };
 
   // 📤 Share File
-  const shareFile = async (path) => {
-    try {
-      await Share.open({
-        title: 'Share PDF',
-        url: 'file://' + path,
-        type: 'application/pdf',
-      });
-    } catch (err) {
-      if (err?.message !== 'User did not share') {
-        console.log('Error sharing file:', err);
-        Alert.alert('Error', 'Could not share file.');
-      }
-    }
-  };
+const shareFile = async (path) => {
+  try {
+    const fileUri = path.startsWith('file://')
+      ? path
+      : `file://${path}`;
+
+    await Sharing.shareAsync(fileUri, {
+      mimeType: 'application/pdf',
+      dialogTitle: 'Share PDF',
+    });
+  } catch (error) {
+    console.log('Error sharing file:', error);
+  }
+};
 
   // 🗑 Delete File
   const deleteFile = async (path) => {

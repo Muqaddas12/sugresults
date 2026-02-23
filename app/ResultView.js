@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import { generatePDF } from 'react-native-html-to-pdf';
 import LoadingIndicator from '../src/components/ActivityIndicator';
 import logo from '../src/images/logo';
 const { SaveResult } = NativeModules;
@@ -146,7 +147,7 @@ newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img s
       fileName: 'sugresults',
       directory: 'Documents',
     };
-    let file = await RNHTMLtoPDF.convert(options);
+    let file = await generatePDF(options);
     return file.filePath;
   };
 
