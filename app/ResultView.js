@@ -1,12 +1,12 @@
-import { WebView } from 'react-native-webview';
-import { Text, TouchableOpacity, StyleSheet, View, Platform, PermissionsAndroid, Alert, NativeModules } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import { Alert, NativeModules, PermissionsAndroid, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
+
+import LoadingIndicator from '@/components/ActivityIndicator';
+import { logoBase64 } from '@/components/logo';
 import { generatePDF } from 'react-native-html-to-pdf';
-import LoadingIndicator from '../src/components/ActivityIndicator';
-import logo from '../src/images/logo';
 const { SaveResult } = NativeModules;
 
 const ResultView = () => {
@@ -89,12 +89,12 @@ const ResultView = () => {
   newData = newData?.replace(
     `<p align="center"><img src="Icon.JPG" width="100" height="100" /><img src="sug.png" width="72" height="79" align="right" /></p>`,
     `<div style="text-align:center;">
-     <img src="${logo}" width="120" />
+     <img src="${logoBase64}" width="120" />
    </div>`
   );
 newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img src="sug.png" width="72" height="79" align="right" />`,
   `<div style="text-align:center;">
-     <img src="${logo}" width="120" />
+     <img src="${logoBase64}" width="120" />
    </div>`
 )
   // 📂 Storage Permission

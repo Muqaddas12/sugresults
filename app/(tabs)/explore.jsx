@@ -5,7 +5,7 @@ import RNFS from 'react-native-fs';
 
 import FileViewer from 'react-native-file-viewer';
 import { Ionicons as Icon } from '@expo/vector-icons';
-import BottomBar from '../src/components/BottomBar';
+
 import * as Sharing from 'expo-sharing';
 const Downloads = () => {
   const [files, setFiles] = useState([]);
@@ -157,8 +157,7 @@ const onRefresh = async () => {
 />
       )}
 
-      {/* Bottom Bar */}
-      <BottomBar currentPage="Downloads" />
+   
     </View>
   );
 };

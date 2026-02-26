@@ -1,32 +1,34 @@
-import React, { useEffect, useState ,useRef} from 'react';
+
+import SessionSelectModal from '@/components/SessionSelectModal';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  View,
-  StatusBar,
   ToastAndroid,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
-  Keyboard,
+  TouchableOpacity,
   TouchableWithoutFeedback,
+  View
 } from 'react-native';
-import logo from '../src/images/logo';
-import SessionSelectModal from '../src/components/SessionSelectModal';
 // Helpers & Config
-import generateSessionOptions from '../src/helper/getSessionDropdownOptions';
-import GetResults from '../src/helper/GetResult';
-import coursesConfig from '../src/config/courseConfig.json';
-import semesterconfig from '../src/config/semesterConfig.json';
-import { saveSelectedData,getSelectedData } from '../src/helper/storage';
-import BottomBar from '../src/components/BottomBar';
-import LoadingIndicator from '../src/components/ActivityIndicator';
-const Homepage = () => {
+import getSessionDropdownOptions from '@/src/helper/getSessionDropdownOptions';
+
+import GetResults from '@/src/helper/GetResult';
+import { getSelectedData, saveSelectedData } from '@/src/helper/storage';
+
+import LoadingIndicator from '../../components/ActivityIndicator';
+import coursesConfig from '../../src/config/coursesConfig.json';
+import semesterconfig from '../../src/config/semesterConfig.json';
+
+import Logo from '@/components/logo';
+export default function Homepage(){
   const [course, setCourse] = useState('');
   const [session, setSession] = useState('');
   const [rollNumber, setRollNumber] = useState('');
@@ -43,7 +45,7 @@ const [sessionModalVisible, setSessionModalVisible] = useState(false);
 const [courseModalVisible, setCourseModalVisible] = useState(false);
 const [semesterModalVisible, setSemesterModalVisible] = useState(false);
   // Generate session dropdown options
-  const sessionItems = generateSessionOptions();
+  const sessionItems = getSessionDropdownOptions();
 // Load saved selection when app starts
 useEffect(() => {
   const fetchSavedSelection = async () => {
@@ -133,13 +135,8 @@ useEffect(() => {
       >
         <View style={styles.container}>
           <StatusBar barStyle={'dark-content'} />
-
-          <Image
-            source={{
-              uri: logo,
-            }}
-            style={styles.image}
-          />
+<Logo/>
+         
 
           <Text style={styles.header}>Shobhit University Gangoh</Text>
           <Text style={styles.subHeader}>GRADE SHEET (PROVISIONAL)</Text>
@@ -297,7 +294,6 @@ useEffect(() => {
 
          
 
-          <BottomBar currentPage={'Home'} />
         </View>
       </ScrollView>
     </TouchableWithoutFeedback>
@@ -313,7 +309,7 @@ const styles = StyleSheet.create({
  container: {
   flex:1,
   paddingHorizontal: 20,
-  paddingTop: 30,
+ justifyContent:'center',
  
   backgroundColor: '#FFFFFF',
   alignItems: 'center',
@@ -438,4 +434,4 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
 });
-export default Homepage;
+
