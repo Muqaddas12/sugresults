@@ -4,11 +4,46 @@ const USER_SELECTION_KEY = 'userSelection';
 const SEARCH_HISTORY_KEY = 'searchHistory';
 const MAX_HISTORY_ITEMS = 15;
 
+const inMemoryStore = new Map();
+
+const safeGetItem = async (key) => {
+  try {
+    if (AsyncStorage && typeof AsyncStorage.getItem === 'function') {
+      return await AsyncStorage.getItem(key);
+    }
+  } catch (e) {
+    console.warn('Storage read fallback:', e);
+  }
+  return inMemoryStore.get(key) ?? null;
+};
+
+const safeSetItem = async (key, value) => {
+  try {
+    if (AsyncStorage && typeof AsyncStorage.setItem === 'function') {
+      return await AsyncStorage.setItem(key, value);
+    }
+  } catch (e) {
+    console.warn('Storage write fallback:', e);
+  }
+  inMemoryStore.set(key, value);
+};
+
+const safeRemoveItem = async (key) => {
+  try {
+    if (AsyncStorage && typeof AsyncStorage.removeItem === 'function') {
+      return await AsyncStorage.removeItem(key);
+    }
+  } catch (e) {
+    console.warn('Storage remove fallback:', e);
+  }
+  inMemoryStore.delete(key);
+};
+
 // Save last selected data for pre-fill
 export const saveSelectedData = async (session, course, semester, rollNumber, extra = {}) => {
   try {
     const data = { session, course, semester, rollNumber, ...extra, updatedAt: Date.now() };
-    await AsyncStorage.setItem(USER_SELECTION_KEY, JSON.stringify(data));
+    await safeSetItem(USER_SELECTION_KEY, JSON.stringify(data));
   } catch (error) {
     console.error('Error saving selection:', error);
   }
@@ -17,7 +52,7 @@ export const saveSelectedData = async (session, course, semester, rollNumber, ex
 // Get last selected data for pre-fill
 export const getSelectedData = async () => {
   try {
-    const value = await AsyncStorage.getItem(USER_SELECTION_KEY);
+    const value = await safeGetItem(USER_SELECTION_KEY);
     if (value !== null) {
       return JSON.parse(value);
     }
@@ -31,7 +66,7 @@ export const getSelectedData = async () => {
 // Clear last selected data
 export const clearSelectedData = async () => {
   try {
-    await AsyncStorage.removeItem(USER_SELECTION_KEY);
+    await safeRemoveItem(USER_SELECTION_KEY);
   } catch (error) {
     console.error('Error clearing selection:', error);
   }
@@ -58,7 +93,7 @@ export const saveSearchHistory = async (searchItem) => {
     const filteredHistory = history.filter((item) => item.id !== id && item.rollNumber !== newItem.rollNumber);
     const updatedHistory = [newItem, ...filteredHistory].slice(0, MAX_HISTORY_ITEMS);
 
-    await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory));
+    await safeSetItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory));
     return updatedHistory;
   } catch (error) {
     console.error('Error saving search history:', error);
@@ -69,7 +104,7 @@ export const saveSearchHistory = async (searchItem) => {
 // Retrieve full search history
 export const getSearchHistory = async () => {
   try {
-    const value = await AsyncStorage.getItem(SEARCH_HISTORY_KEY);
+    const value = await safeGetItem(SEARCH_HISTORY_KEY);
     if (value !== null) {
       const parsed = JSON.parse(value);
       return Array.isArray(parsed) ? parsed : [];
@@ -86,7 +121,7 @@ export const deleteSearchHistoryItem = async (itemId) => {
   try {
     const history = await getSearchHistory();
     const updatedHistory = history.filter((item) => item.id !== itemId && item.rollNumber !== itemId);
-    await AsyncStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory));
+    await safeSetItem(SEARCH_HISTORY_KEY, JSON.stringify(updatedHistory));
     return updatedHistory;
   } catch (error) {
     console.error('Error deleting search history item:', error);
@@ -97,7 +132,7 @@ export const deleteSearchHistoryItem = async (itemId) => {
 // Clear entire search history
 export const clearSearchHistory = async () => {
   try {
-    await AsyncStorage.removeItem(SEARCH_HISTORY_KEY);
+    await safeRemoveItem(SEARCH_HISTORY_KEY);
     return [];
   } catch (error) {
     console.error('Error clearing search history:', error);

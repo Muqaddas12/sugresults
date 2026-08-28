@@ -12,6 +12,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as FileSystem from 'expo-file-system/legacy';
 import { WebView } from 'react-native-webview';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
@@ -189,17 +190,34 @@ const ResultView = () => {
 
       const filePath = await createPDF();
 
-      if (Platform.OS === 'android') {
-        const timestamp = new Date().getTime().toString().slice(-4);
-        const fileName = `sugresults_${rollNumber || 'result'}_${timestamp}.pdf`;
-        await SaveResult.saveFileToDownloads(filePath, fileName);
-        Alert.alert(
-          'Download Complete! 🎉',
-          `Provisional result saved to Downloads/sugresults/${fileName}\n\nYou can view and share it anytime from the Downloads tab.`
-        );
-      } else {
-        Alert.alert('Saved', 'PDF generated successfully.');
+      const timestamp = new Date().getTime().toString().slice(-4);
+      const fileName = `sugresults_${rollNumber || 'result'}_${timestamp}.pdf`;
+
+      // 1. Save to app document directory for in-app offline access
+      try {
+        const appDir = `${FileSystem.documentDirectory}sugresults/`;
+        const dirInfo = await FileSystem.getInfoAsync(appDir);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(appDir, { intermediates: true });
+        }
+        await FileSystem.copyAsync({ from: filePath, to: `${appDir}${fileName}` });
+      } catch (copyErr) {
+        console.log('Error caching PDF for offline tab:', copyErr);
       }
+
+      // 2. Save to Android public Downloads directory
+      if (Platform.OS === 'android' && SaveResult?.saveFileToDownloads) {
+        try {
+          await SaveResult.saveFileToDownloads(filePath, fileName);
+        } catch (saveErr) {
+          console.log('Error saving to public downloads:', saveErr);
+        }
+      }
+
+      Alert.alert(
+        'Download Complete! 🎉',
+        `Provisional result saved successfully as ${fileName}.\n\nYou can view and share it anytime from the Downloads tab.`
+      );
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to save PDF: ' + (err.message || 'Unknown error'));

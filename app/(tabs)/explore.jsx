@@ -11,55 +11,65 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import RNFS from 'react-native-fs';
-import FileViewer from 'react-native-file-viewer';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as Haptics from 'expo-haptics';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 
-const Downloads = () => {
+export default function Downloads() {
   const insets = useSafeAreaInsets();
   const [files, setFiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch downloaded PDFs
-  const fetchFiles = async () => {
-    try {
-      const downloadsDir = `${RNFS.DownloadDirectoryPath}/sugresults`;
+  const getDownloadsDir = () => {
+    return `${FileSystem.documentDirectory}sugresults/`;
+  };
 
-      const exists = await RNFS.exists(downloadsDir);
-      if (!exists) {
+  // Fetch downloaded PDFs
+  const fetchFiles = useCallback(async () => {
+    try {
+      const dir = getDownloadsDir();
+      const dirInfo = await FileSystem.getInfoAsync(dir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
         setFiles([]);
         return;
       }
 
-      const result = await RNFS.readDir(downloadsDir);
+      const fileNames = await FileSystem.readDirectoryAsync(dir);
+      const pdfNames = fileNames.filter((name) => name.toLowerCase().endsWith('.pdf'));
 
-      const pdfFiles = result
-        .filter((item) => item.isFile() && item.name.toLowerCase().endsWith('.pdf'))
-        .sort((a, b) => new Date(b.mtime) - new Date(a.mtime))
-        .map((item) => ({
-          name: item.name,
-          path: item.path,
-          size: (item.size / 1024).toFixed(1),
-          modified: new Date(item.mtime).toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-          }),
-        }));
+      const fileDetails = await Promise.all(
+        pdfNames.map(async (name) => {
+          const filePath = `${dir}${name}`;
+          const info = await FileSystem.getInfoAsync(filePath);
+          return {
+            name,
+            path: filePath,
+            size: info.exists && info.size ? (info.size / 1024).toFixed(1) : '0.0',
+            modified:
+              info.exists && info.modificationTime
+                ? new Date(info.modificationTime * 1000).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })
+                : 'Recent',
+          };
+        })
+      );
 
-      setFiles(pdfFiles);
+      setFiles(fileDetails.reverse());
     } catch (err) {
-      console.error('Error reading files:', err);
+      console.log('Error reading files:', err);
     }
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       fetchFiles();
-    }, [])
+    }, [fetchFiles])
   );
 
   const onRefresh = async () => {
@@ -68,14 +78,23 @@ const Downloads = () => {
     setRefreshing(false);
   };
 
-  // Open File
+  // Open / View File
   const openFile = async (path) => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      await FileViewer.open(path, { showOpenWithDialog: true });
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(path, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'View / Share Grade Sheet',
+          UTI: 'com.adobe.pdf',
+        });
+      } else {
+        Alert.alert('Grade Sheet Saved', `Location: ${path}`);
+      }
     } catch (err) {
       console.log('Error opening file:', err);
-      Alert.alert('Error', 'Could not open PDF file. Ensure a PDF reader app is installed.');
+      Alert.alert('Error', 'Could not open PDF file.');
     }
   };
 
@@ -83,11 +102,10 @@ const Downloads = () => {
   const shareFile = async (path) => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const fileUri = path.startsWith('file://') ? path : `file://${path}`;
-
-      await Sharing.shareAsync(fileUri, {
+      await Sharing.shareAsync(path, {
         mimeType: 'application/pdf',
         dialogTitle: 'Share Grade Sheet PDF',
+        UTI: 'com.adobe.pdf',
       });
     } catch (error) {
       console.log('Error sharing file:', error);
@@ -107,7 +125,7 @@ const Downloads = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await RNFS.unlink(path);
+              await FileSystem.deleteAsync(path, { idempotent: true });
               fetchFiles();
             } catch (err) {
               console.log('Error deleting file:', err);
@@ -422,6 +440,4 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
-
-export default Downloads;
 
