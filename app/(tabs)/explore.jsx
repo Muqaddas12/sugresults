@@ -10,6 +10,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -18,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
 const Downloads = () => {
+  const insets = useSafeAreaInsets();
   const [files, setFiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -173,8 +175,15 @@ const Downloads = () => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 16) + 4,
+        },
+      ]}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
 
       {/* Header */}
       <View style={styles.headerContainer}>

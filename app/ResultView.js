@@ -11,7 +11,7 @@ import {
   View,
   StatusBar,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
@@ -209,9 +209,8 @@ const ResultView = () => {
   };
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
 
         {/* Top Header */}
         <View style={styles.topHeader}>
@@ -289,7 +288,6 @@ const ResultView = () => {
 
         {loading && <LoadingIndicator message={loadingMsg} />}
       </SafeAreaView>
-    </SafeAreaProvider>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   Alert,
   Keyboard,
@@ -14,6 +14,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 
@@ -36,14 +37,14 @@ import coursesConfig from '@/src/config/coursesConfig.json';
 import semesterconfig from '@/src/config/semesterConfig.json';
 
 export default function Homepage() {
+  const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef(null);
+
   const [session, setSession] = useState('');
   const [course, setCourse] = useState('');
   const [semester, setSemester] = useState('');
   const [rollNumber, setRollNumber] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const [semestersItem, setSemestersItem] = useState([]);
-  const [courseItem, setCourseItem] = useState([]);
   const [searchHistory, setSearchHistory] = useState([]);
 
   const [isSessionSelected, setSessionSelected] = useState(false);
@@ -54,7 +55,23 @@ export default function Homepage() {
   const [courseModalVisible, setCourseModalVisible] = useState(false);
   const [semesterModalVisible, setSemesterModalVisible] = useState(false);
 
-  const sessionItems = getSessionDropdownOptions();
+  // Memoized dropdown data for fast rendering
+  const sessionItems = useMemo(() => getSessionDropdownOptions(), []);
+
+  const courseItem = useMemo(() => {
+    return coursesConfig[session]?.courses || coursesConfig.default?.courses || [];
+  }, [session]);
+
+  const semestersItem = useMemo(() => {
+    if (session && course) {
+      return (
+        semesterconfig[session]?.[course] ||
+        semesterconfig.default?.[course] ||
+        []
+      );
+    }
+    return [];
+  }, [session, course]);
 
   // Load saved selection and search history when app starts
   const loadInitialData = useCallback(async () => {
@@ -93,25 +110,6 @@ export default function Homepage() {
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
-
-  // Update course menu when session changes
-  useEffect(() => {
-    const availableCourses = coursesConfig[session]?.courses || coursesConfig.default?.courses || [];
-    setCourseItem(availableCourses);
-  }, [session]);
-
-  // Update semester menu when course or session changes
-  useEffect(() => {
-    if (session && course) {
-      const availableSemesters =
-        semesterconfig[session]?.[course] ||
-        semesterconfig.default?.[course] ||
-        [];
-      setSemestersItem(availableSemesters);
-    } else {
-      setSemestersItem([]);
-    }
-  }, [session, course]);
 
   // Dropdown state handler
   const dropDownMenuHandler = (value, type) => {
@@ -263,11 +261,18 @@ export default function Homepage() {
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: '#F8FAFC' }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          ref={scrollViewRef}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingTop: Math.max(insets.top, Platform.OS === 'android' ? (StatusBar.currentHeight || 24) : 16) + 4,
+            },
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -484,6 +489,11 @@ export default function Homepage() {
                   keyboardType="numeric"
                   value={rollNumber}
                   maxLength={15}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      scrollViewRef.current?.scrollToEnd({ animated: true });
+                    }, 250);
+                  }}
                   onChangeText={(text) => {
                     const filtered = text.replace(/[^0-9]/g, '').slice(0, 15);
                     setRollNumber(filtered);
