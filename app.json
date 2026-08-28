@@ -20,7 +20,9 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.mtbyown.sugresults"
+      "package": "com.mtbyown.sugresults",
+      "targetSdkVersion": 36,
+      "compileSdkVersion": 36
     },
     "plugins": [
       "expo-router",

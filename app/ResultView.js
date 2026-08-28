@@ -1,103 +1,128 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, NativeModules, PermissionsAndroid, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  NativeModules,
+  PermissionsAndroid,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  StatusBar,
+} from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import * as Haptics from 'expo-haptics';
 
 import LoadingIndicator from '@/components/ActivityIndicator';
 import { logoBase64 } from '@/components/logo';
 import { generatePDF } from 'react-native-html-to-pdf';
+
 const { SaveResult } = NativeModules;
 
 const ResultView = () => {
-  const { result ,rollNumber} = useLocalSearchParams();
+  const { result, rollNumber } = useLocalSearchParams();
   const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState('Loading result...');
 
-  // 📱 Mobile Friendly CSS
+  // Mobile Friendly Responsive CSS for Grade Sheet
   const mobileCSS = `
     <style type="text/css">
+      * {
+        box-sizing: border-box;
+      }
       body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
           Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
         margin: 0;
-
-        background-color: #f9fafb;
-        color: #111827;
+        padding: 12px;
+        background-color: #F8FAFC;
+        color: #0F172A;
       }
 
-      h1, h2, h3 {
+      h1, h2, h3, h4 {
         text-align: center;
-        color: #1e3a8a;
-        margin-bottom: 10px;
+        color: #1E1B4B;
+        margin: 6px 0;
+        letter-spacing: -0.3px;
       }
 
       p {
         text-align: center;
-        font-size: 14px;
-        color: #374151;
+        font-size: 13px;
+        color: #475569;
+        margin: 4px 0;
       }
 
       .result-box {
-        background: #fff;
+        background: #FFFFFF;
         padding: 16px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border: 1px solid #E2E8F0;
         margin-bottom: 20px;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 10px;
-        border-radius: 8px;
+        margin-top: 14px;
+        margin-bottom: 14px;
+        border-radius: 10px;
         overflow: hidden;
+        font-size: 12px;
       }
 
       table th {
-        background-color: #2563eb;
-        color: #fff;
-        padding: 5px;
-        font-size: 14px;
+        background-color: #4338CA;
+        color: #FFFFFF;
+        padding: 8px 6px;
+        font-size: 12px;
+        font-weight: 700;
         text-transform: uppercase;
+        border: 1px solid #3730A3;
       }
 
       table td {
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        padding: 5px;
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        padding: 7px 6px;
         text-align: center;
-        font-size: 13px;
+        font-size: 12px;
+        color: #1E293B;
       }
 
       table tr:nth-child(even) td {
-        background-color: #f3f4f6;
+        background-color: #F8FAFC;
       }
 
       img {
         display: block;
-        margin: 0 auto 15px auto;
-        max-width: 100px;
+        margin: 0 auto 12px auto;
+        max-width: 110px;
         height: auto;
       }
-
-  
     </style>
   `;
 
-  // 🧹 Clean and transform result HTML
+  // Clean and transform result HTML
   let newData = result?.replace('<a href=index.php>Search Another Number</a>', '');
   newData = newData?.replace(
     `<p align="center"><img src="Icon.JPG" width="100" height="100" /><img src="sug.png" width="72" height="79" align="right" /></p>`,
     `<div style="text-align:center;">
-     <img src="${logoBase64}" width="120" />
+     <img src="${logoBase64}" width="110" />
    </div>`
   );
-newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img src="sug.png" width="72" height="79" align="right" />`,
-  `<div style="text-align:center;">
-     <img src="${logoBase64}" width="120" />
+  newData = newData?.replace(
+    `<img src="Icon1.JPG" width="300" height="300" /><img src="sug.png" width="72" height="79" align="right" />`,
+    `<div style="text-align:center;">
+     <img src="${logoBase64}" width="110" />
    </div>`
-)
-  // 📂 Storage Permission
+  );
+
+  // Storage Permission
   const requestPermission = async () => {
     if (Platform.OS === 'android' && Platform.Version < 30) {
       try {
@@ -105,11 +130,11 @@ newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img s
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
           {
             title: 'Storage Permission Required',
-            message: 'App needs access to your storage to save the result PDF',
+            message: 'App needs storage permission to save your provisional result PDF.',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
             buttonPositive: 'OK',
-          },
+          }
         );
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (err) {
@@ -117,12 +142,12 @@ newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img s
         return false;
       }
     }
-    return true; // iOS + Android 11+ don’t need it
+    return true;
   };
 
-  // 📝 Generate HTML for PDF
+  // Generate HTML for PDF
   const generatePdf = () => {
-    const newHtml = `
+    return `
       <html>
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -135,44 +160,49 @@ newData=newData?.replace(`<img src="Icon1.JPG" width="300" height="300" /><img s
         </body>
       </html>
     `;
- 
-    return newHtml;
   };
 
-  // 📄 Create PDF
+  // Create PDF
   const createPDF = async () => {
     const newHtml = generatePdf();
-    let options = {
+    const options = {
       html: newHtml,
-      fileName: 'sugresults',
+      fileName: `sugresults_${rollNumber || 'result'}`,
       directory: 'Documents',
     };
-    let file = await generatePDF(options);
+    const file = await generatePDF(options);
     return file.filePath;
   };
 
-  // 💾 Save PDF File
+  // Save PDF File to Downloads
   const saveFile = async () => {
     try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const hasPermission = await requestPermission();
       if (!hasPermission) {
-        Alert.alert('Permission Denied', 'Storage permission is required.');
+        Alert.alert('Permission Denied', 'Storage permission is required to save PDF.');
         return;
       }
+
+      setLoadingMsg('Generating PDF & saving...');
       setLoading(true);
 
-      const u = await createPDF();
+      const filePath = await createPDF();
 
       if (Platform.OS === 'android') {
-        const lastTwo = new Date().getSeconds().toString().padStart(2, '0');
-
-const fileName = `sugresults_${rollNumber}_${lastTwo}.pdf`;
-        await SaveResult.saveFileToDownloads(u, fileName);
-        Alert.alert('Download complete', `Saved to Downloads/sugresults/${fileName}`);
+        const timestamp = new Date().getTime().toString().slice(-4);
+        const fileName = `sugresults_${rollNumber || 'result'}_${timestamp}.pdf`;
+        await SaveResult.saveFileToDownloads(filePath, fileName);
+        Alert.alert(
+          'Download Complete! 🎉',
+          `Provisional result saved to Downloads/sugresults/${fileName}\n\nYou can view and share it anytime from the Downloads tab.`
+        );
+      } else {
+        Alert.alert('Saved', 'PDF generated successfully.');
       }
     } catch (err) {
       console.error(err);
-      Alert.alert('Error', 'Failed to save file: ' + (err.message || 'Unknown error'));
+      Alert.alert('Error', 'Failed to save PDF: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -181,19 +211,51 @@ const fileName = `sugresults_${rollNumber}_${lastTwo}.pdf`;
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safeArea}>
-        {/* 🌐 WebView to show result */}
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+        {/* Top Header */}
+        <View style={styles.topHeader}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="chevron-back" size={24} color="#0F172A" />
+          </TouchableOpacity>
+
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Provisional Grade Sheet</Text>
+            {rollNumber && (
+              <View style={styles.rollBadge}>
+                <Ionicons name="person-outline" size={11} color="#4338CA" style={{ marginRight: 3 }} />
+                <Text style={styles.rollBadgeText}>Roll: {rollNumber}</Text>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity
+            style={styles.downloadIconBtn}
+            onPress={saveFile}
+            disabled={loading}
+          >
+            <Ionicons name="download-outline" size={22} color="#4338CA" />
+          </TouchableOpacity>
+        </View>
+
+        {/* WebView displaying result */}
         <WebView
           originWhitelist={['*']}
           source={{
             html: `
+              <!DOCTYPE html>
               <html>
                 <head>
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
                   ${mobileCSS}
                 </head>
                 <body>
                   <div class="result-box">
-                    ${newData || 'No Data Available'}
+                    ${newData || '<p>No Result Data Found.</p>'}
                   </div>
                 </body>
               </html>
@@ -201,29 +263,31 @@ const fileName = `sugresults_${rollNumber}_${lastTwo}.pdf`;
           }}
           javaScriptEnabled
           domStorageEnabled
-          style={{ flex: 1 }}
+          style={styles.webView}
         />
 
-        {/* 🔘 Bottom Buttons */}
-        <View style={styles.buttonBox}>
+        {/* Bottom Actions Bar */}
+        <View style={styles.bottomBar}>
           <TouchableOpacity
             disabled={loading}
-            style={[styles.button, loading ? styles.buttonDisabled : styles.buttonEnabled]}
-            onPress={() => router.push('/')}
+            style={styles.secondaryActionBtn}
+            onPress={() => router.push('/(tabs)')}
           >
-            <Text style={styles.buttonText}>Search Again</Text>
+            <Ionicons name="search-outline" size={18} color="#4338CA" style={{ marginRight: 6 }} />
+            <Text style={styles.secondaryActionText}>Search Another</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             disabled={loading}
-            style={[styles.button, loading ? styles.buttonDisabled : styles.buttonEnabled]}
+            style={[styles.primaryActionBtn, loading && styles.buttonDisabled]}
             onPress={saveFile}
           >
-            <Text style={styles.buttonText}>Download PDF</Text>
+            <Ionicons name="cloud-download-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.primaryActionText}>Save PDF</Text>
           </TouchableOpacity>
         </View>
 
-        {loading && <LoadingIndicator />}
+        {loading && <LoadingIndicator message={loadingMsg} />}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -232,36 +296,118 @@ const fileName = `sugresults_${rollNumber}_${lastTwo}.pdf`;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#FFFFFF',
   },
-  button: {
-    marginVertical: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignSelf: 'center',
-    minWidth: '40%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 15,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  buttonBox: {
+  topHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  headerTitleContainer: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.3,
+  },
+  rollBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginTop: 2,
+  },
+  rollBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#4338CA',
+  },
+  downloadIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  webView: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderColor: '#e5e7eb',
+    borderTopColor: '#E2E8F0',
+    gap: 12,
+  },
+  secondaryActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EEF2FF',
+    paddingVertical: 13,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  secondaryActionText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4338CA',
+  },
+  primaryActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4338CA',
+    paddingVertical: 13,
+    borderRadius: 12,
+    shadowColor: '#4338CA',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  primaryActionText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   buttonDisabled: {
-    backgroundColor: '#9ca3af',
-  },
-  buttonEnabled: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#94A3B8',
+    elevation: 0,
+    shadowOpacity: 0,
   },
 });
 
 export default ResultView;
+

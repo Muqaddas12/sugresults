@@ -1,15 +1,26 @@
-import React, {  useState , useCallback} from 'react';
+import React, { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  StatusBar,
+  Platform,
+} from 'react-native';
 import RNFS from 'react-native-fs';
-
 import FileViewer from 'react-native-file-viewer';
-import { Ionicons as Icon } from '@expo/vector-icons';
-
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Sharing from 'expo-sharing';
+import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
+
 const Downloads = () => {
   const [files, setFiles] = useState([]);
-const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
   // Fetch downloaded PDFs
   const fetchFiles = async () => {
     try {
@@ -23,15 +34,19 @@ const [refreshing, setRefreshing] = useState(false);
 
       const result = await RNFS.readDir(downloadsDir);
 
-     const pdfFiles = result
-  .filter(item => item.isFile() && item.name.endsWith('.pdf'))
-  .sort((a, b) => new Date(b.mtime) - new Date(a.mtime)) // 🔥 newest first
-  .map(item => ({
-    name: item.name,
-    path: item.path,
-    size: (item.size / 1024).toFixed(1), // KB
-    modified: new Date(item.mtime).toLocaleDateString(),
-  }));
+      const pdfFiles = result
+        .filter((item) => item.isFile() && item.name.toLowerCase().endsWith('.pdf'))
+        .sort((a, b) => new Date(b.mtime) - new Date(a.mtime))
+        .map((item) => ({
+          name: item.name,
+          path: item.path,
+          size: (item.size / 1024).toFixed(1),
+          modified: new Date(item.mtime).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          }),
+        }));
 
       setFiles(pdfFiles);
     } catch (err) {
@@ -39,125 +54,174 @@ const [refreshing, setRefreshing] = useState(false);
     }
   };
 
- useFocusEffect(
-  useCallback(() => {
-    fetchFiles();
-  }, [])
-);
+  useFocusEffect(
+    useCallback(() => {
+      fetchFiles();
+    }, [])
+  );
 
-  // 📂 Open File
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchFiles();
+    setRefreshing(false);
+  };
+
+  // Open File
   const openFile = async (path) => {
     try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       await FileViewer.open(path, { showOpenWithDialog: true });
     } catch (err) {
       console.log('Error opening file:', err);
-      Alert.alert('Error', 'Could not open file.');
+      Alert.alert('Error', 'Could not open PDF file. Ensure a PDF reader app is installed.');
     }
   };
 
-  // 📤 Share File
-const shareFile = async (path) => {
-  try {
-    const fileUri = path.startsWith('file://')
-      ? path
-      : `file://${path}`;
-
-    await Sharing.shareAsync(fileUri, {
-      mimeType: 'application/pdf',
-      dialogTitle: 'Share PDF',
-    });
-  } catch (error) {
-    console.log('Error sharing file:', error);
-  }
-};
-
-  // 🗑 Delete File
-  const deleteFile = async (path) => {
+  // Share File
+  const shareFile = async (path) => {
     try {
-      await RNFS.unlink(path);
-      Alert.alert('Deleted', 'File removed successfully.');
-      fetchFiles(); // refresh list
-    } catch (err) {
-      console.log('Error deleting file:', err);
-      Alert.alert('Error', 'Could not delete file.');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const fileUri = path.startsWith('file://') ? path : `file://${path}`;
+
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Share Grade Sheet PDF',
+      });
+    } catch (error) {
+      console.log('Error sharing file:', error);
     }
   };
-  // 🗑 Delete File with confirmation
-const confirmDelete = (path) => {
-  Alert.alert(
-    "Delete File",
-    "Are you sure you want to delete this file?",
-    [
-      { text: "Cancel", style: "cancel" },
-      { 
-        text: "Delete", 
-        style: "destructive", 
-        onPress: async () => {
-          try {
-            await RNFS.unlink(path);
-            Alert.alert("Deleted", "File removed successfully.");
-            fetchFiles(); // refresh list
-          } catch (err) {
-            console.log("Error deleting file:", err);
-            Alert.alert("Error", "Could not delete file.");
-          }
-        } 
-      }
-    ]
-  );
-};
-const onRefresh = async () => {
-  setRefreshing(true);
-  await fetchFiles();
-  setRefreshing(false);
-};
+
+  // Delete File with confirmation
+  const confirmDelete = (path, name) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      'Delete Grade Sheet',
+      `Are you sure you want to delete "${name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await RNFS.unlink(path);
+              fetchFiles();
+            } catch (err) {
+              console.log('Error deleting file:', err);
+              Alert.alert('Error', 'Could not delete file.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.fileCard}>
-      <TouchableOpacity style={styles.fileInfo} onPress={() => openFile(item.path)}>
-        <Icon name="document-text-outline" size={30} color="#5e46b4" style={styles.fileIcon} />
-       <View style={{ flex: 1 }}>
-  <Text style={styles.fileName}>{item.name}</Text>
-  <Text style={styles.fileMeta}>
-    {item.size} KB • {item.modified}
-  </Text>
-</View>
+      <TouchableOpacity
+        style={styles.fileMainTouch}
+        activeOpacity={0.7}
+        onPress={() => openFile(item.path)}
+      >
+        <View style={styles.pdfBadgeCircle}>
+          <Ionicons name="document-text" size={22} color="#EF4444" />
+          <View style={styles.pdfPill}>
+            <Text style={styles.pdfPillText}>PDF</Text>
+          </View>
+        </View>
+
+        <View style={styles.fileDetails}>
+          <Text style={styles.fileName} numberOfLines={2}>
+            {item.name}
+          </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.fileMetaText}>
+              {item.size} KB • {item.modified}
+            </Text>
+          </View>
+        </View>
       </TouchableOpacity>
 
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={() => shareFile(item.path)} style={styles.actionBtn}>
-          <Icon name="share-social-outline" size={22} color="#4caf50" />
+      {/* Action Buttons */}
+      <View style={styles.actionRow}>
+        <TouchableOpacity
+          style={styles.actionCircleBtn}
+          onPress={() => openFile(item.path)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="eye-outline" size={19} color="#4338CA" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => confirmDelete(item.path)} style={styles.actionBtn}>
-  <Icon name="trash-outline" size={22} color="#e53935" />
-</TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.actionCircleBtn}
+          onPress={() => shareFile(item.path)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="share-social-outline" size={19} color="#10B981" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionCircleBtn, styles.deleteActionCircle]}
+          onPress={() => confirmDelete(item.path, item.name)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="trash-outline" size={19} color="#EF4444" />
+        </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>📥 Downloads</Text>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <View style={styles.headerTitleRow}>
+          <View style={styles.headerIconWrapper}>
+            <Ionicons name="download" size={20} color="#4338CA" />
+          </View>
+          <View>
+            <Text style={styles.headerTitle}>Downloaded Results</Text>
+            <Text style={styles.headerSubtitle}>Offline Grade Sheet PDFs</Text>
+          </View>
+        </View>
+        {files.length > 0 && (
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>{files.length} Saved</Text>
+          </View>
+        )}
+      </View>
 
       {files.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Icon name="folder-open-outline" size={50} color="#ccc" />
-          <Text style={styles.emptyText}>No files found</Text>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="folder-open-outline" size={54} color="#94A3B8" />
+          </View>
+          <Text style={styles.emptyTitle}>No Saved Grade Sheets</Text>
+          <Text style={styles.emptySubtitle}>
+            Downloaded grade sheet PDFs will appear here for instant offline access and sharing.
+          </Text>
+          <TouchableOpacity
+            style={styles.checkResultButton}
+            onPress={() => router.push('/(tabs)')}
+          >
+            <Ionicons name="search-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.checkResultButtonText}>Check Your Result</Text>
+          </TouchableOpacity>
         </View>
       ) : (
-       <FlatList
-  data={files}
-  keyExtractor={(item) => item.path}
-  renderItem={renderItem}
-  contentContainerStyle={styles.list}
-  refreshing={refreshing}
-  onRefresh={onRefresh}
-  showsVerticalScrollIndicator={false}
-/>
+        <FlatList
+          data={files}
+          keyExtractor={(item) => item.path}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContainer}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          showsVerticalScrollIndicator={false}
+        />
       )}
-
-   
     </View>
   );
 };
@@ -165,71 +229,190 @@ const onRefresh = async () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: 40,
-    paddingHorizontal: 16,
+    backgroundColor: '#F8FAFC',
+    paddingTop: Platform.OS === 'ios' ? 50 : 16,
   },
-  header: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#5e46b4',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  list: {
-    paddingBottom: 80, // space for bottom bar
-  },
-  fileCard: {
+  headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9f8ff',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
-    elevation: 2, // shadow for Android
-    shadowColor: '#000', // shadow for iOS
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
   },
-  fileIcon: {
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
- fileInfo: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  flex: 1,
-  marginRight: 10, // 👈 space before action icons
-},
- fileName: {
-  fontSize: 16,
-  fontWeight: '600',
-  color: '#333',
-  flexShrink: 1,   // 👈 allows wrapping
-  flexWrap: 'wrap' // 👈 move to next line if long
-},
-  fileMeta: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  actions: {
+  headerSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  countBadge: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  countText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#4338CA',
+  },
+  listContainer: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  fileCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  fileMainTouch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  pdfBadgeCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    position: 'relative',
+  },
+  pdfPill: {
+    position: 'absolute',
+    bottom: -3,
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 4,
+    borderRadius: 3,
+  },
+  pdfPillText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  fileDetails: {
+    flex: 1,
+  },
+  fileName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    lineHeight: 20,
+    marginBottom: 3,
+  },
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  actionBtn: {
-    marginLeft: 12,
+  fileMetaText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: 10,
+    gap: 10,
+  },
+  actionCircleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  deleteActionCircle: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FEE2E2',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 32,
   },
-  emptyText: {
-    fontSize: 16,
-    color: '#aaa',
-    marginTop: 8,
+  emptyIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  checkResultButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4338CA',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowColor: '#4338CA',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  checkResultButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
 
 export default Downloads;
+
